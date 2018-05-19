@@ -1,11 +1,9 @@
 
+import os
 import tensorflow as tf
 from module import discriminator, generator_resnet
 from utils import l1_loss, l2_loss, cross_entropy_loss
 
-def discriminator(inputs, num_filters, reuse = False, scope_name = 'discriminator'):
-
-def generator_resnet(inputs, num_filters, reuse = False, scope_name = 'generator_resnet'):
 
 
 class CycleGAN(object):
@@ -14,19 +12,28 @@ class CycleGAN(object):
 
         self.input_size = input_size
 
-
         self.discriminator = discriminator
         self.generator = generator
         self.lambda_cycle = lambda_cycle
 
-        self.input_A_real = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_A_real')
-        self.input_B_real = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_B_real')
-        # self.input_A_fake and self.input_B_fake will be the placeholders for the generated fake images
-        self.input_A_fake = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_A_fake')
-        self.input_B_fake = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_B_fake')
+        self.build_model()
+        self.optimizer_initializer()
 
+        self.saver = tf.train.Saver()
+        self.sess = tf.Session()
+        self.sess.run(tf.global_variables_initializer())
 
     def build_model(self):
+
+        # Placeholders for real training samples
+        self.input_A_real = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_A_real')
+        self.input_B_real = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_B_real')
+        # Placeholders for fake generated samples
+        self.input_A_fake = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_A_fake')
+        self.input_B_fake = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'input_B_fake')
+        # Placeholder for test samples
+        self.test_A = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'test_A')
+        self.test_B = tf.placeholder(tf.float32, shape = [None] + self.input_size, name = 'test_B')
 
         self.generation_B = self.generator(inputs = self.input_A_real, num_filters = 64, reuse = False, scope_name = 'generator_A2B')
         self.cycle_A = self.generator(inputs = self.generation_B, num_filters = 64, reuse = False, scope_name = 'generator_B2A')
@@ -38,7 +45,7 @@ class CycleGAN(object):
         self.discrimination_B_fake = self.discriminator(inputs = self.generation_B, num_filters = 64, reuse = False, scope_name = 'discriminator_B')
 
         # Cycle loss
-        self.cycle_loss = l1_loss(y = self.input_A_real, y_hat = self.cycle_A) + l1_loss(y = self.input_B_real, y_hat = cycle_B)
+        self.cycle_loss = l1_loss(y = self.input_A_real, y_hat = self.cycle_A) + l1_loss(y = self.input_B_real, y_hat = self.cycle_B)
 
         # Generator loss
         # Generator wants to fool discriminator
@@ -60,118 +67,38 @@ class CycleGAN(object):
         self.discriminator_loss_A = (self.discriminator_loss_input_A_real + self.discriminator_loss_input_A_fake) / 2
 
         self.discriminator_loss_input_B_real = l2_loss(y = tf.ones_like(self.discrimination_input_B_real), y_hat = self.discrimination_input_B_real)
-        self.discriminator_loss_input_A_fake = l2_loss(y = tf.zeros_like(self.discrimination_input_B_fake), y_hat = self.discrimination_input_B_fake)
+        self.discriminator_loss_input_B_fake = l2_loss(y = tf.zeros_like(self.discrimination_input_B_fake), y_hat = self.discrimination_input_B_fake)
         self.discriminator_loss_B = (self.discriminator_loss_input_B_real + self.discriminator_loss_input_B_fake) / 2
 
         # Merge the two discriminators into one
         self.discriminator_loss = self.discriminator_loss_A + self.discriminator_loss_B
 
+        t_vars = tf.trainable_variables()
+        self.d_vars = [var for var in t_vars if 'discriminator' in var.name]
+        self.g_vars = [var for var in t_vars if 'generator' in var.name]
+        print('===============================')
+        for var in t_vars: print(var.name)
+        print('===============================')
+        for var in self.d_vars: print(var.name)
+        print('===============================')
+        for var in self.g_vars: print(var.name)
+
+
+    def optimizer_initializer(self):
+
+        self.learning_rate = tf.placeholder(tf.float32, None, name = 'learning_rate')
+        self.discriminator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.discriminator_loss)
+        self.generator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.generator_loss) 
+
+
+    def train(self, input_A, input_B, learning_rate):
+
+        generation_A, generation_B, generator_loss, _ = self.sess.run([self.generation_A, self.generation_B, self.generator_loss, self.generator_optimizer], feed_dict = {self.self.input_A_real: input_A, self.input_B_real: input_B, self.learning_rate: learning_rate})
+
+        discriminator_loss, _ = self.sess.run([self.discriminator_loss, self.discriminator_optimizer], feed_dict = {self.self.input_A_real: input_A, self.input_B_real: input_B, self.learning_rate: learning_rate, self.input_A_fake: generation_A, self.input_B_fake: generation_B})
 
 
 
-'''
-
-        self.discriminator_loss_input_B_real = l2_loss(y = tf.ones_like(self.discrimination_input_B_real), y_hat = self.discrimination_input_B_real)
-        
-
-
-
-
-        self.discriminator
-
-
-
-
-
-        # Discriminator loss
-        # Minimize (D_A(a) - 1)^2
-        self.discriminator_loss_A_1 = l2_loss(y = tf.ones_like(self.discrimination_A_real), y_hat = self.discrimination_A_real)
-        # Minimize (D_B(b) - 1)^2
-        self.discriminator_loss_B_1 = l2_loss(y = tf.ones_like(self.discrimination_B_real), y_hat = self.discrimination_B_real)
-        # Minimize (D_A(G_{B->A}(b)) - 0)^2
-        self.discriminator_loss_A_2 = l2_loss(y = tf.zeros_like(self.discrimination_A_fake), y_hat = self.discrimination_A_fake)
-        # Minimize (D_B(G_{A->B}(a)) - 0)^2
-        self.discriminator_loss_B_2 = l2_loss(y = tf.zeros_like(self.discrimination_B_fake), y_hat = self.discrimination_B_fake)
-
-
-
-
-
-
-
-
-        # Adversarial loss
-        self.discriminator_loss_A = (self.discriminator_loss_A_1 + self.discriminator_loss_A_2) / 2
-        self.discriminator_loss_B = (self.discriminator_loss_B_1 + self.discriminator_loss_B_2) / 2
-
-        # Generator loss
-        # Minimize (D_A(G_{B->A}(b)) - 1)^2
-        self.generator_loss_A = l2_loss(y = tf.ones_like(self.discrimination_A_fake), y_hat = self.discrimination_A_fake)
-        # Minimize (D_B(G_{A->B}(a)) - 1)^2
-        self.generator_loss_B = l2_loss(y = tf.ones_like(self.discrimination_B_fake), y_hat = self.discrimination_B_fake)
-
-
-
-
-        # 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        self.discriminator_loss_A_1 = l2_loss(y = tf.ones_like(self.discrimination_A), y_hat = self.discrimination_A)
-        # Minimize (D_B(b) - 1)^2
-        self.discriminator_loss_B_1 = l2_loss(y = tf.ones_like(self.discrimination_B), y_hat = self.discrimination_B)
-        # Minimize (D_A(G_{B->A}(b)))
-        self.discriminator_loss_A_2 = l2_loss(y = tf.ones_like(self.cycle_A), y_hat = self.cycle_A)
-        self.discriminator_loss_B_2 = l2_loss(y = tf.ones_like(self.cycle_B), y_hat = self.cycle_B)
-
-        self.discriminator_loss_A = (self.discriminator_loss_A_1 + self.discriminator_loss_A_2) / 2
-        self.discriminator_loss_B = (self.discriminator_loss_B_1 + self.discriminator_loss_B_2) / 2
-
-        # Generator loss
-
-        self.generator_loss_A2B = 
-
-
-
-
-
-
-
-
-
-
-class CNN(object):
-
-    def __init__(self, input_size, num_classes, optimizer):
-
-        self.num_classes = num_classes
-        self.input_size = input_size
-        self.optimizer = optimizer
-
-        self.learning_rate = tf.placeholder(tf.float32, shape = [], name = 'learning_rate')
-        self.dropout_rate = tf.placeholder(tf.float32, shape = [], name = 'dropout_rate')
-        self.input = tf.placeholder(tf.float32, [None] + self.input_size, name = 'input')
-        self.label = tf.placeholder(tf.float32, [None, self.num_classes], name = 'label')
-        self.output = self.network_initializer()
-        self.loss = self.loss_initializer()
-        self.optimizer = self.optimizer_initializer()
-
-        self.saver = tf.train.Saver()
-        self.sess = tf.Session()
-        self.sess.run(tf.global_variables_initializer())
-'''
+if __name__ == '__main__':
+    
+    model = CycleGAN(input_size = [256, 256, 3])

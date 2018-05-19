@@ -58,8 +58,7 @@ def instance_norm_layer(
     instance_norm_layer = tf.contrib.layers.instance_norm(
         inputs = inputs,
         epsilon = epsilon,
-        activation_fn = activation_fn,
-        name = name)
+        activation_fn = activation_fn)
 
     return instance_norm_layer
 
@@ -93,10 +92,10 @@ def residual_block(
 
     h0_pad = tf.pad(tensor = inputs, paddings = paddings, mode = 'REFLECT', name = 'pad0')
     h1 = conv2d_layer(inputs = h0_pad, filters = filters, kernel_size = kernel_size, strides = strides, padding = 'valid', activation = None, name = name_prefix + 'conv1')
-    h1_norm = instance_norm_layer(inputs = h1, activation_fn = tf.nn.relu(), name = name_prefix + 'norm1')
+    h1_norm = instance_norm_layer(inputs = h1, activation_fn = tf.nn.relu, name = name_prefix + 'norm1')
     h1_pad = tf.pad(tensor = h1_norm, paddings = paddings, mode = 'REFLECT', name = 'pad1')
     h2 = conv2d_layer(inputs = h1_pad, filters = filters, kernel_size = kernel_size, strides = strides, padding = 'valid', activation = None, name = name_prefix + 'conv2')
-    h2_norm = instance_norm_layer(inputs = h3, activation_fn = None, name = name_prefix + 'norm2')
+    h2_norm = instance_norm_layer(inputs = h2, activation_fn = None, name = name_prefix + 'norm2')
 
     return inputs + h2_norm
 
@@ -107,44 +106,48 @@ def discriminator(inputs, num_filters = 64, reuse = False, scope_name = 'discrim
     with tf.variable_scope(scope_name) as scope:
 
         # Discriminator would be reused in CycleGAN
-        if  reuse:
+        if reuse:
             scope.reuse_variables()
         else:
-            assert scope.reuse_variables() is False
+            assert scope.reuse is False
 
-        leaky_relu = tf.nn.leaky_relu(alpha = 0.2)
-
-        h0 = conv2d_layer(inputs = inputs, filters = num_filters, activation = leaky_relu, name = 'h0_conv')
+        h0 = conv2d_layer(inputs = inputs, filters = num_filters, activation = tf.nn.leaky_relu, name = 'h0_conv')
         h1 = conv2d_layer(inputs = h0, filters = num_filters * 2, activation = None, name = 'h1_conv')
-        h1_norm = instance_norm_layer(inputs = h1, activation_fn = leaky_relu, name = 'h1_norm')
+        h1_norm = instance_norm_layer(inputs = h1, activation_fn = tf.nn.leaky_relu, name = 'h1_norm')
         h2 = conv2d_layer(inputs = h1_norm, filters = num_filters * 4, activation = None, name = 'h2_conv')
-        h2_norm = instance_norm_layer(inputs = h2, activation_fn = leaky_relu, name = 'h2_norm')
+        h2_norm = instance_norm_layer(inputs = h2, activation_fn = tf.nn.leaky_relu, name = 'h2_norm')
         h3 = conv2d_layer(inputs = h2_norm, filters = num_filters * 8, strides = [1, 1], activation = None, name = 'h3_conv')
-        h3_norm = instance_norm_layer(inputs = h3, activation_fn = leaky_relu, name = 'h3_norm')
+        h3_norm = instance_norm_layer(inputs = h3, activation_fn = tf.nn.leaky_relu, name = 'h3_norm')
         h4 = conv2d_layer(inputs = h3_norm, filters = 1, strides = [1, 1], activation = None, name = 'h4_conv')
 
         return h4
 
 
-def generator_resnet(inputs, num_filters = 64, reuse = False, scope_name = 'generator_resnet'):
+def generator_resnet(inputs, num_filters = 64, output_channels = 3, reuse = False, scope_name = 'generator_resnet'):
 
     with tf.variable_scope(scope_name) as scope:
 
         # Discriminator would be reused in CycleGAN
-        if  reuse:
+        if reuse:
             scope.reuse_variables()
         else:
-            assert scope.reuse_variables() is False
+            assert scope.reuse is False
+
+        #output_channels = inputs.shape[-1]
 
         # Check tf.pad using 'REFLECT' mode
         # https://www.tensorflow.org/api_docs/python/tf/pad
         c0 = tf.pad(tensor = inputs, paddings = [[0, 0], [3, 3], [3, 3], [0, 0]], mode = 'REFLECT', name = 'c0_pad')
-        c1 = conv2d_layer(inputs = inputs, filters = num_filters, kernel_size = [7, 7], strides = [1, 1], padding = 'valid', activation = None, name = 'c1_conv')
-        c1_norm = instance_norm_layer(inputs = c1, activation_fn = tf.nn.relu(), name = 'c1_norm')
+
+        c1 = conv2d_layer(inputs = c0, filters = num_filters, kernel_size = [7, 7], strides = [1, 1], padding = 'valid', activation = None, name = 'c1_conv')
+
+        c1_norm = instance_norm_layer(inputs = c1, activation_fn = tf.nn.relu, name = 'c1_norm')
+
         c2 = conv2d_layer(inputs = c1_norm, filters = num_filters * 2, kernel_size = [3, 3], strides = [2, 2], activation = None, name = 'c2_conv')
-        c2_norm = instance_norm_layer(inputs = c2, activation_fn = tf.nn.relu(), name = 'c2_norm')
+        c2_norm = instance_norm_layer(inputs = c2, activation_fn = tf.nn.relu, name = 'c2_norm')
         c3 = conv2d_layer(inputs = c2_norm, filters = num_filters * 4, kernel_size = [3, 3], strides = [2, 2], activation = None, name = 'c3_conv')
-        c3_norm = instance_norm_layer(inputs = c3, activation_fn = tf.nn.relu(), name = 'c3_norm')
+        c3_norm = instance_norm_layer(inputs = c3, activation_fn = tf.nn.relu, name = 'c3_norm')
+
 
         r1 = residual_block(inputs = c3_norm, filters = num_filters * 4, name_prefix = 'residual1_')
         r2 = residual_block(inputs = r1, filters = num_filters * 4, name_prefix = 'residual2_')
@@ -156,12 +159,13 @@ def generator_resnet(inputs, num_filters = 64, reuse = False, scope_name = 'gene
         r8 = residual_block(inputs = r7, filters = num_filters * 4, name_prefix = 'residual8_')
         r9 = residual_block(inputs = r8, filters = num_filters * 4, name_prefix = 'residual9_')
 
-        d1 = deconv_layer(inputs = r9, filters = num_filters * 2, kernel_size = [3, 3], strides = [2, 2], name = 'd1_deconv')
-        d1_norm = instance_norm_layer(inputs = d1, activation_fn = tf.nn.relu(), name = 'd1_norm')
-        d2 = deconv_layer(inputs = d1_norm, filters = num_filters, kernel_size = [3, 3], strides = [2, 2], name = 'd2_deconv')
-        d2_norm = instance_norm_layer(inputs = d2, activation_fn = tf.nn.relu(), name = 'd2_norm')
+        d1 = conv2d_transpose_layer(inputs = r9, filters = num_filters * 2, kernel_size = [3, 3], strides = [2, 2], name = 'd1_deconv')
+        d1_norm = instance_norm_layer(inputs = d1, activation_fn = tf.nn.relu, name = 'd1_norm')
+        d2 = conv2d_transpose_layer(inputs = d1_norm, filters = num_filters, kernel_size = [3, 3], strides = [2, 2], name = 'd2_deconv')
+        d2_norm = instance_norm_layer(inputs = d2, activation_fn = tf.nn.relu, name = 'd2_norm')
         d2_pad = tf.pad(tensor = d2_norm, paddings = [[0, 0], [3, 3], [3, 3], [0, 0]], mode = 'REFLECT', name = 'd2_pad')
-        d3 = conv2d_layer(inputs = d2_pad, filters = num_filters, kernel_size = [7, 7], strides = [1, 1], padding = 'valid', activation = tf.nn.tanh(), name = 'd3_conv')
+        d3 = conv2d_layer(inputs = d2_pad, filters = output_channels, kernel_size = [7, 7], strides = [1, 1], padding = 'valid', activation = tf.nn.tanh, name = 'd3_conv')
+
 
         return d3
 
