@@ -46,7 +46,7 @@ $ python download.py --help
 usage: download.py [-h] [--download_dir DOWNLOAD_DIR] [--data_dir DATA_DIR]
                    [--datasets DATASETS [DATASETS ...]]
 
-Download CycleGAN datset.
+Download CycleGAN datsets.
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -54,7 +54,7 @@ optional arguments:
                         download directory for zipped data
   --data_dir DATA_DIR   data directory for unzipped data
   --datasets DATASETS [DATASETS ...]
-                        dataset to download: apple2orange,
+                        datasets to download: apple2orange,
                         summer2winter_yosemite, horse2zebra, monet2photo,
                         cezanne2photo, ukiyoe2photo, vangogh2photo, maps,
                         cityscapes, facades, iphone2dslr_flower, ae_photos
@@ -67,6 +67,10 @@ $ python download.py --download_dir ./download --data_dir ./data --datasets appl
 ```
 
 ### Train Model
+
+To have a good conversion capability, the training would take at least 100 epochs, which could take very long time even using a NVIDIA GTX TITAN X graphic card. The model also consumes a lot of graphic card memories (> 10 GB). But this could be reduced by reducing the number of convolution filters ``num_filters`` in the model.
+
+
 
 
 ### Image Conversion
