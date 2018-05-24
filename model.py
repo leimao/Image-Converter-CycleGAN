@@ -3,8 +3,7 @@ import os
 import tensorflow as tf
 from module import discriminator, generator_resnet
 from utils import l1_loss, l2_loss, cross_entropy_loss
-
-
+from datetime import datetime
 
 class CycleGAN(object):
 
@@ -27,7 +26,9 @@ class CycleGAN(object):
 
         if self.mode == 'train':
             self.train_step = 0
-            self.writer = tf.summary.FileWriter(log_dir, tf.get_default_graph())
+            now = datetime.now()
+            self.log_dir = os.path.join(log_dir, now.strftime('%Y%m%d-%H%M%S'))
+            self.writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
             self.generator_summaries, self.discriminator_summaries = self.summary()
 
     def build_model(self):
@@ -80,13 +81,11 @@ class CycleGAN(object):
         # Merge the two discriminators into one
         self.discriminator_loss = self.discriminator_loss_A + self.discriminator_loss_B
 
-
         # Categorize variables because we have to optimize the two sets of the variables separately
         trainable_variables = tf.trainable_variables()
         self.discriminator_vars = [var for var in trainable_variables if 'discriminator' in var.name]
         self.generator_vars = [var for var in trainable_variables if 'generator' in var.name]
         #for var in t_vars: print(var.name)
-
 
         # Reserved for test
         self.generation_B_test = self.generator(inputs = self.input_A_test, num_filters = self.num_filters, reuse = True, scope_name = 'generator_A2B')
@@ -98,7 +97,6 @@ class CycleGAN(object):
         self.learning_rate = tf.placeholder(tf.float32, None, name = 'learning_rate')
         self.discriminator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.discriminator_loss, var_list = self.discriminator_vars)
         self.generator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.generator_loss, var_list = self.generator_vars) 
-
 
     def train(self, input_A, input_B, learning_rate):
 
@@ -135,8 +133,9 @@ class CycleGAN(object):
         if not os.path.exists(directory):
             os.makedirs(directory)
         self.saver.save(self.sess, os.path.join(directory, filename))
-        return os.path.join(directory, filename)
         
+        return os.path.join(directory, filename)
+
     def load(self, filepath):
 
         self.saver.restore(self.sess, filepath)

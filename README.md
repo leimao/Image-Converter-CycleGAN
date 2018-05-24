@@ -68,7 +68,7 @@ $ python download.py --download_dir ./download --data_dir ./data --datasets appl
 
 ### Train Model
 
-To have a good conversion capability, the training would take at least 100 epochs, which could take very long time even using a NVIDIA GTX TITAN X graphic card. The model also consumes a lot of graphic card memories (> 10 GB). But this could be reduced by reducing the number of convolution filters ``num_filters`` in the model.
+To have a good conversion capability, the training would take at least 100 epochs, which could take very long time even using a NVIDIA GTX TITAN X graphic card. The model also consumes a lot of graphic card memories. But this could be reduced by reducing the number of convolution filters ``num_filters`` in the model.
 
 ```bash
 $ python train.py --help
@@ -108,9 +108,9 @@ optional arguments:
 For example, to train CycleGAN model for ``horse2zebra`` dataset:
 
 ```bash
-$ python train.py --img_A_dir ./data/horse2zebra/trainA --img_B_dir ./data/horse2zebra/trainB --model_dir ./model --model_name horse_zebra.ckpt --random_seed 0 --validation_A_dir ./data/horse2zebra/testA --validation_B_dir ./data/horse2zebra/testB --output_dir ./validation_output
+$ python train.py --img_A_dir ./data/horse2zebra/trainA --img_B_dir ./data/horse2zebra/trainB --model_dir ./model/horse_zebra --model_name horse_zebra.ckpt --random_seed 0 --validation_A_dir ./data/horse2zebra/testA --validation_B_dir ./data/horse2zebra/testB --output_dir ./validation_output
 ```
-With ``--validation_A_dir``, ``--validation_B_dir``, and ``--output_dir`` set, we could monitor the conversion of validation images after each epoch using our bare eye. 
+With ``validation_A_dir``, ``validation_B_dir``, and ``output_dir`` set, we could monitor the conversion of validation images after each epoch using our bare eye. 
 
 ### Image Conversion
 
@@ -140,11 +140,11 @@ optional arguments:
 To convert images, put images into ``img_dir`` and run the following commands in the terminal, the converted images would be saved in the ``output_dir``:
 
 ```bash
-$ python convert.py --model_filepath ./model/horse_zebra.ckpt --img_dir ./data/horse2zebra/trainA --conversion_direction A2B --output_dir ./converted_images
+$ python convert.py --model_filepath ./model/horse_zebra/horse_zebra.ckpt --img_dir ./data/horse2zebra/testA --conversion_direction A2B --output_dir ./converted_images
 ```
 The convention for ``conversion_direction`` is first object in the model file name is A, and the second object in the model file name is B. In this case, ``horse = A`` and ``zebra = B``.
 
-### Demo
+## Demo
 
 
 ## References
@@ -154,3 +154,6 @@ The convention for ``conversion_direction`` is first object in the model file na
 * Hardik Bansal's CycleGAN TensorFlow Implementation [Repository](https://github.com/hardikbansal)
 
 ## To-Do List
+
+- [ ] Create a ``main.py`` file
+- [ ] Pre-train more models for different conversions

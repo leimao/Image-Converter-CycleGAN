@@ -2,6 +2,7 @@
 import argparse
 import cv2
 import os
+import numpy as np
 
 from model import CycleGAN
 from utils import load_data, sample_train_data, image_scaling, image_scaling_inverse
@@ -9,9 +10,9 @@ from utils import load_data, sample_train_data, image_scaling, image_scaling_inv
 def conversion(model_filepath, img_dir, conversion_direction, output_dir):
 
     input_size = [256, 256, 3]
-    num_filters = 64
+    num_filters = 8
 
-    model = CycleGAN(input_size = input_size, num_filters = num_filters)
+    model = CycleGAN(input_size = input_size, num_filters = num_filters, mode = 'test')
 
     model.load(filepath = model_filepath)
 
@@ -22,7 +23,7 @@ def conversion(model_filepath, img_dir, conversion_direction, output_dir):
         filepath = os.path.join(img_dir, file)
         img = cv2.imread(filepath)
         img_height, img_width, img_channel = img.shape
-        img = cv2.resize(img, (input_size[1], load_size[0]))
+        img = cv2.resize(img, (input_size[1], input_size[0]))
         img = image_scaling(imgs = img)
         img_converted = model.test(inputs = np.array([img]), direction = conversion_direction)[0]
         img_converted = image_scaling_inverse(imgs = img_converted)
@@ -34,8 +35,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description = 'Convert images using pre-trained CycleGAN model.')
 
-    model_filepath_default = './model/horse_zebra.ckpt'
-    img_dir_default = './data/horse2zebra/trainA'
+    model_filepath_default = './model/horse_zebra/horse_zebra.ckpt'
+    img_dir_default = './data/horse2zebra/testA'
     conversion_direction_default = 'A2B'
     output_dir_default = './converted_images'
 

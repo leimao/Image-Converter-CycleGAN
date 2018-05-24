@@ -5,6 +5,7 @@ import cv2
 import os
 import numpy as np
 import argparse
+import time
 
 from utils import load_data, sample_train_data, image_scaling, image_scaling_inverse
 from model import CycleGAN
@@ -14,10 +15,10 @@ def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A
     np.random.seed(random_seed)
 
     num_epochs = 200
-    mini_batch_size = 1
+    mini_batch_size = 1 # mini_batch_size = 1 is better
     learning_rate = 0.0002
     input_size = [256, 256, 3]
-    num_filters = 64
+    num_filters = 8 
 
     if validation_A_dir is not None:
         validation_A_output_dir = os.path.join(output_dir, 'converted_A')
@@ -29,7 +30,7 @@ def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A
         if not os.path.exists(validation_B_output_dir):
             os.makedirs(validation_B_output_dir)
 
-    model = CycleGAN(input_size = input_size, num_filters = num_filters)
+    model = CycleGAN(input_size = input_size, num_filters = num_filters, mode = 'train')
 
     dataset_A_raw = load_data(img_dir = img_A_dir, load_size = 256)
     dataset_B_raw = load_data(img_dir = img_B_dir, load_size = 256)
@@ -37,19 +38,20 @@ def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A
     for epoch in range(num_epochs):
         print('Epoch: %d' % epoch)
 
+        start_time_epoch = time.time()
+
         dataset_A, dataset_B = sample_train_data(dataset_A_raw, dataset_B_raw, load_size = 286, output_size = 256)
 
         n_samples = dataset_A.shape[0]
         for i in range(n_samples // mini_batch_size):
-            print('Minibatch: %d' % i)
 
             start = i * mini_batch_size
             end = (i + 1) * mini_batch_size
 
             generator_loss, discriminator_loss = model.train(input_A = dataset_A[start:end], input_B = dataset_B[start:end], learning_rate = learning_rate)
 
-            print('Generator Loss : %f' % generator_loss)
-            print('Discriminator Loss : %f' % discriminator_loss)
+            if i % 50 == 0:
+                print('Minibatch: %d, Generator Loss : %f, Discriminator Loss : %f' % (i, generator_loss, discriminator_loss))
 
         model.save(directory = model_dir, filename = model_name)
 
@@ -58,7 +60,7 @@ def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A
                 filepath = os.path.join(validation_A_dir, file)
                 img = cv2.imread(filepath)
                 img_height, img_width, img_channel = img.shape
-                img = cv2.resize(img, (input_size[1], load_size[0]))
+                img = cv2.resize(img, (input_size[1], input_size[0]))
                 img = image_scaling(imgs = img)
                 img_converted = model.test(inputs = np.array([img]), direction = 'A2B')[0]
                 img_converted = image_scaling_inverse(imgs = img_converted)
@@ -70,12 +72,17 @@ def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A
                 filepath = os.path.join(validation_B_dir, file)
                 img = cv2.imread(filepath)
                 img_height, img_width, img_channel = img.shape
-                img = cv2.resize(img, (input_size[1], load_size[0]))
+                img = cv2.resize(img, (input_size[1], input_size[0]))
                 img = image_scaling(imgs = img)
                 img_converted = model.test(inputs = np.array([img]), direction = 'B2A')[0]
                 img_converted = image_scaling_inverse(imgs = img_converted)
                 img_converted = cv2.resize(img_converted, (img_width, img_height))
                 cv2.imwrite(os.path.join(validation_B_output_dir, os.path.basename(file)), img_converted)
+
+        end_time_epoch = time.time()
+        time_elapsed_epoch = end_time_epoch - start_time_epoch
+
+        print('Time Elapsed for This Epoch: %02d:%02d:%02d' % (time_elapsed_epoch // 3600, (time_elapsed_epoch % 3600 // 60), (time_elapsed_epoch % 60 // 1)))
 
 if __name__ == '__main__':
 
@@ -83,7 +90,7 @@ if __name__ == '__main__':
 
     img_A_dir_default = './data/horse2zebra/trainA'
     img_B_dir_default = './data/horse2zebra/trainB'
-    model_dir_default = './model'
+    model_dir_default = './model/horse_zebra'
     model_name_default = 'horse_zebra.ckpt'
     random_seed_default = 0
     validation_A_dir_default = './data/horse2zebra/testA'
