@@ -78,15 +78,15 @@ def download_dataset(download_dir = './download', data_dir = './data', datasets 
 
 if __name__ == '__main__':
 
-    parser = argparse.ArgumentParser(description = 'Download CycleGAN datsets.')
+    parser = argparse.ArgumentParser(description = 'Download CycleGAN datasets.')
 
     download_dir_default = './download'
     data_dir_default = './data'
     datasets_default = 'horse2zebra'
 
-    parser.add_argument('--download_dir', type = str, help = 'download directory for zipped data', default = download_dir_default)
-    parser.add_argument('--data_dir', type = str, help = 'data directory for unzipped data', default = data_dir_default)
-    parser.add_argument('--datasets', type = str, nargs = '+', help = 'datasets to download: apple2orange, summer2winter_yosemite, horse2zebra, monet2photo, cezanne2photo, ukiyoe2photo, vangogh2photo, maps, cityscapes, facades, iphone2dslr_flower, ae_photos', default = datasets_default)
+    parser.add_argument('--download_dir', type = str, help = 'Download directory for zipped data', default = download_dir_default)
+    parser.add_argument('--data_dir', type = str, help = 'Data directory for unzipped data', default = data_dir_default)
+    parser.add_argument('--datasets', type = str, nargs = '+', help = 'Datasets to download: apple2orange, summer2winter_yosemite, horse2zebra, monet2photo, cezanne2photo, ukiyoe2photo, vangogh2photo, maps, cityscapes, facades, iphone2dslr_flower, ae_photos', default = datasets_default)
 
     argv = parser.parse_args()
 
