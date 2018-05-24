@@ -1,28 +1,42 @@
 
 
 import tensorflow as tf
-
-from utils import load_train_data, image_scaling_inverse
-from model import CycleGAN
 import cv2
 import os
 import numpy as np
 
-def train(img_A_dir = './data/horse2zebra/trainA', img_B_dir = './data/horse2zebra/trainB'):
+from utils import load_data, sample_train_data, image_scaling, image_scaling_inverse
+from model import CycleGAN
 
-    num_epochs = 100
-    mini_batch_size = 10
-    #learning_rate = 0.002
-    learning_rate = 0.005
+def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A_dir, validation_B_dir, output_dir):
 
-    model = CycleGAN(input_size = [256, 256, 3], num_filters = 16)
+    np.random.seed(random_seed)
+
+    num_epochs = 200
+    mini_batch_size = 1
+    learning_rate = 0.0002
+    input_size = [256, 256, 3]
+    num_filters = 64
+
+    if validation_A_dir is not None:
+        validation_A_output_dir = os.path.join(output_dir, 'converted_A')
+        if not os.path.exists(validation_A_output_dir):
+            os.makedirs(validation_A_output_dir)
+
+    if validation_B_dir is not None:
+        validation_B_output_dir = os.path.join(output_dir, 'converted_B')
+        if not os.path.exists(validation_B_output_dir):
+            os.makedirs(validation_B_output_dir)
+
+    model = CycleGAN(input_size = input_size, num_filters = num_filters)
+
+    dataset_A_raw = load_data(img_dir = img_A_dir, load_size = 256)
+    dataset_B_raw = load_data(img_dir = img_B_dir, load_size = 256)
 
     for epoch in range(num_epochs):
         print('Epoch: %d' % epoch)
-        dataset_A, dataset_B = load_train_data(img_A_dir = img_A_dir, img_B_dir = img_B_dir)
 
-        #dataset_A = dataset_A[0:20]
-        #dataset_B = dataset_B[0:20]
+        dataset_A, dataset_B = sample_train_data(dataset_A_raw, dataset_B_raw, load_size = 286, output_size = 256)
 
         n_samples = dataset_A.shape[0]
         for i in range(n_samples // mini_batch_size):
@@ -36,38 +50,33 @@ def train(img_A_dir = './data/horse2zebra/trainA', img_B_dir = './data/horse2zeb
             print('Generator Loss : %f' % generator_loss)
             print('Discriminator Loss : %f' % discriminator_loss)
 
-        model.save(directory = './model', filename = 'cyclegan.ckpt')
+        model.save(directory = model_dir, filename = model_name)
 
-        testA_dir = './data/horse2zebra/testA'
-        testB_dir = './data/horse2zebra/testB'
-        demo_dir = './demo'
-        demo_A_dir = os.path.join(demo_dir, 'convertedA')
-        demo_B_dir = os.path.join(demo_dir, 'convertedB')
-
-        if not os.path.exists(demo_dir):
-            os.makedirs(demo_dir)
-        if not os.path.exists(demo_A_dir):
-            os.makedirs(demo_A_dir)
-        if not os.path.exists(demo_B_dir):
-            os.makedirs(demo_B_dir)
-
-        #test_A_paths = [os.path.join(testA_dir, file) for file in os.listdir(testA_dir) if os.path.isfile(os.path.join(testA_dir, file))]
-        #test_B_paths = [os.path.join(testB_dir, file) for file in os.listdir(testB_dir) if os.path.isfile(os.path.join(testB_dir, file))]
-
-        for file in os.listdir(testA_dir):
-            filepath = os.path.join(testA_dir, file)
+        for file in os.listdir(validation_A_dir):
+            filepath = os.path.join(validation_A_dir, file)
             img = cv2.imread(filepath)
-            conversion = model.test(inputs = np.array([img]), direction = 'A2B')[0]
-            conversion = image_scaling_inverse(imgs = conversion)
-            cv2.imwrite(os.path.join(demo_A_dir, os.path.basename(file)), conversion)
+            img = image_scaling(imgs = img)
+            img_converted = model.test(inputs = np.array([img]), direction = 'A2B')[0]
+            img_converted = image_scaling_inverse(imgs = img_converted)
+            cv2.imwrite(os.path.join(validation_A_output_dir, os.path.basename(file)), img_converted)
 
-        for file in os.listdir(testB_dir):
-            filepath = os.path.join(testB_dir, file)
+        for file in os.listdir(validation_B_dir):
+            filepath = os.path.join(validation_B_dir, file)
             img = cv2.imread(filepath)
-            conversion = model.test(inputs = np.array([img]), direction = 'B2A')[0]
-            conversion = image_scaling_inverse(imgs = conversion)
-            cv2.imwrite(os.path.join(demo_B_dir, os.path.basename(file)), conversion)
+            img = image_scaling(imgs = img)
+            img_converted = model.test(inputs = np.array([img]), direction = 'B2A')[0]
+            img_converted = image_scaling_inverse(imgs = img_converted)
+            cv2.imwrite(os.path.join(validation_B_output_dir, os.path.basename(file)), img_converted)
 
 if __name__ == '__main__':
 
-    train()
+    img_A_dir = './data/horse2zebra/trainA'
+    img_B_dir = './data/horse2zebra/trainB'
+    model_dir = './model'
+    model_name = 'horse_zebra.ckpt'
+    random_seed = 0
+    validation_A_dir = './data/horse2zebra/testA'
+    validation_B_dir = './data/horse2zebra/testB'
+    output_dir = './validation_output'
+
+    train(img_A_dir = img_A_dir, img_B_dir = img_B_dir, model_dir = model_dir, model_name = model_name, random_seed = random_seed, validation_A_dir = validation_A_dir, validation_B_dir = validation_B_dir, output_dir = output_dir)
