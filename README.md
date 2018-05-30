@@ -9,7 +9,7 @@ University of Chicago
 Unlike ordinary pixel-to-pixel translation models, cycle-consistent adversarial networks (CycleGAN) has been proved to be useful for image translations without using paired data. This is a reproduced implementation of CycleGAN for image translations, but it is more compact.
 
 <p align="center">
-    <img src = "./teaser_high_res.jpg" width="100%">
+    <img src = "./figures/teaser_high_res.jpg" width="100%">
 </p>
 
 ## Dependencies
