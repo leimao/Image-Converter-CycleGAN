@@ -146,11 +146,19 @@ The convention for ``conversion_direction`` is first object in the model file na
 
 ## Demo
 
-### Zebra and Horse Conversion
+### Horse and Zebra Conversion
+
+The horse and zebra conversion model was trained for more than 500 epochs, and some of the selected test images were presented below.
 
 Horse| Horse to Zebra | Zebra | Zebra to Horse |
 :-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
 ![](figures/n02381460_3330.jpg)  |  ![](figures/n02381460_3330_converted.jpg) |  ![](figures/n02391049_2100.jpg)|  ![](figures/n02391049_2100_converted.jpg)
+
+It should be noted that the above presented conversions look extremely well. However, for most of the test images, the conversions always have defects which are visually pickable. Most horses or zebras that have "abnormal" poses does not convert well. The conversion of zebra to horse looks worse than the conversion of horse to zebra. I think one of the reasons that the conversions have defects is that the dataset is small and it does not contain all the poses for horse and zebra.
+
+The test images after 200 epochs does not look too much different to the test images after 500 epochs, although the training loss kept decreasing. 
+
+Download pre-trained [horse-zebra](https://drive.google.com/open?id=1_6TMfAK4q_4tUGEWzAxIQNBKo3E9CIq5) conversion model from Google Drive.
 
 ## References
 
