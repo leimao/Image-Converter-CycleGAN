@@ -146,6 +146,11 @@ The convention for ``conversion_direction`` is first object in the model file na
 
 ## Demo
 
+### Zebra and Horse Conversion
+
+Horse| Horse to Zebra | Zebra | Zebra to Horse |
+:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+![](figures/n02381460_3330.jpg)  |  ![](figures/n02381460_3330_converted.jpg) |  ![](figures/n02391049_2100.jpg)|  ![](figures/n02391049_2100_converted.jpg)
 
 ## References
 
