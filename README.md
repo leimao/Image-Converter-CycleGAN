@@ -156,9 +156,9 @@ Horse| Horse to Zebra | Zebra | Zebra to Horse |
 
 It should be noted that the above presented conversions look extremely well. However, for most of the test images, the conversions always have defects which are visually pickable. Most horses or zebras that have "abnormal" poses does not convert well. The conversion of zebra to horse looks worse than the conversion of horse to zebra. I think one of the reasons that the conversions have defects is that the dataset is small and it does not contain all the poses for horse and zebra.
 
-The test images after 200 epochs does not look too much different to the test images after 500 epochs, although the training loss kept decreasing. 
+The test images after 200 epochs does not look too much different to the test images after 500 epochs, although the training loss kept decreasing. To further optimize the training, I think it might be worthy of trying learning rate decay and cycle loss weight decay.
 
-Download pre-trained [horse-zebra](https://drive.google.com/open?id=1_6TMfAK4q_4tUGEWzAxIQNBKo3E9CIq5) conversion model from Google Drive.
+Download the pre-trained [horse-zebra](https://drive.google.com/open?id=1_6TMfAK4q_4tUGEWzAxIQNBKo3E9CIq5) conversion model from Google Drive.
 
 ## References
 
