@@ -22,11 +22,10 @@ Unlike ordinary pixel-to-pixel translation models, cycle-consistent adversarial 
 
 ```
 .
-├── data
-├── demo
+├── convert.py
 ├── download.py
+├── figures
 ├── LICENSE.md
-├── model
 ├── model.py
 ├── module.py
 ├── README.md
