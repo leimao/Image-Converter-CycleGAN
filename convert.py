@@ -10,7 +10,7 @@ from utils import load_data, sample_train_data, image_scaling, image_scaling_inv
 def conversion(model_filepath, img_dir, conversion_direction, output_dir):
 
     input_size = [256, 256, 3]
-    num_filters = 8
+    num_filters = 64
 
     model = CycleGAN(input_size = input_size, num_filters = num_filters, mode = 'test')
 

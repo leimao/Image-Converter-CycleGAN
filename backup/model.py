@@ -3,12 +3,11 @@ import os
 import tensorflow as tf
 from module import discriminator, generator_resnet
 from utils import l1_loss, l2_loss, cross_entropy_loss
-
-
+from datetime import datetime
 
 class CycleGAN(object):
 
-    def __init__(self, input_size, num_filters = 64, discriminator = discriminator, generator = generator_resnet, lambda_cycle = 10):
+    def __init__(self, input_size, num_filters = 64, discriminator = discriminator, generator = generator_resnet, lambda_cycle = 10, mode = 'train', log_dir = './log'):
 
         self.input_size = input_size
 
@@ -16,6 +15,7 @@ class CycleGAN(object):
         self.generator = generator
         self.lambda_cycle = lambda_cycle
         self.num_filters = num_filters
+        self.mode = mode
 
         self.build_model()
         self.optimizer_initializer()
@@ -23,6 +23,13 @@ class CycleGAN(object):
         self.saver = tf.train.Saver()
         self.sess = tf.Session()
         self.sess.run(tf.global_variables_initializer())
+
+        if self.mode == 'train':
+            self.train_step = 0
+            now = datetime.now()
+            self.log_dir = os.path.join(log_dir, now.strftime('%Y%m%d-%H%M%S'))
+            self.writer = tf.summary.FileWriter(self.log_dir, tf.get_default_graph())
+            self.generator_summaries, self.discriminator_summaries = self.summary()
 
     def build_model(self):
 
@@ -74,15 +81,11 @@ class CycleGAN(object):
         # Merge the two discriminators into one
         self.discriminator_loss = self.discriminator_loss_A + self.discriminator_loss_B
 
-        t_vars = tf.trainable_variables()
-        self.d_vars = [var for var in t_vars if 'discriminator' in var.name]
-        self.g_vars = [var for var in t_vars if 'generator' in var.name]
-        #print('===============================')
+        # Categorize variables because we have to optimize the two sets of the variables separately
+        trainable_variables = tf.trainable_variables()
+        self.discriminator_vars = [var for var in trainable_variables if 'discriminator' in var.name]
+        self.generator_vars = [var for var in trainable_variables if 'generator' in var.name]
         #for var in t_vars: print(var.name)
-        #print('===============================')
-        #for var in self.d_vars: print(var.name)
-        #print('===============================')
-        #for var in self.g_vars: print(var.name)
 
         # Reserved for test
         self.generation_B_test = self.generator(inputs = self.input_A_test, num_filters = self.num_filters, reuse = True, scope_name = 'generator_A2B')
@@ -92,17 +95,23 @@ class CycleGAN(object):
     def optimizer_initializer(self):
 
         self.learning_rate = tf.placeholder(tf.float32, None, name = 'learning_rate')
-        self.discriminator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.discriminator_loss)
-        self.generator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.generator_loss) 
-
+        self.discriminator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.discriminator_loss, var_list = self.discriminator_vars)
+        self.generator_optimizer = tf.train.AdamOptimizer(learning_rate = self.learning_rate, beta1 = 0.5).minimize(self.generator_loss, var_list = self.generator_vars) 
 
     def train(self, input_A, input_B, learning_rate):
 
-        generation_A, generation_B, generator_loss, _ = self.sess.run([self.generation_A, self.generation_B, self.generator_loss, self.generator_optimizer], \
+        generation_A, generation_B, generator_loss, _, generator_summaries = self.sess.run(
+            [self.generation_A, self.generation_B, self.generator_loss, self.generator_optimizer, self.generator_summaries], \
             feed_dict = {self.input_A_real: input_A, self.input_B_real: input_B, self.learning_rate: learning_rate})
 
-        discriminator_loss, _ = self.sess.run([self.discriminator_loss, self.discriminator_optimizer], \
+        self.writer.add_summary(generator_summaries, self.train_step)
+
+        discriminator_loss, _, discriminator_summaries = self.sess.run([self.discriminator_loss, self.discriminator_optimizer, self.discriminator_summaries], \
             feed_dict = {self.input_A_real: input_A, self.input_B_real: input_B, self.learning_rate: learning_rate, self.input_A_fake: generation_A, self.input_B_fake: generation_B})
+
+        self.writer.add_summary(discriminator_summaries, self.train_step)
+
+        self.train_step += 1
 
         return generator_loss, discriminator_loss
 
@@ -124,9 +133,29 @@ class CycleGAN(object):
         if not os.path.exists(directory):
             os.makedirs(directory)
         self.saver.save(self.sess, os.path.join(directory, filename))
+        
         return os.path.join(directory, filename)
 
+    def load(self, filepath):
 
-if __name__ == '__main__':
-    
-    model = CycleGAN(input_size = [256, 256, 3])
+        self.saver.restore(self.sess, filepath)
+
+
+    def summary(self):
+
+        with tf.name_scope('generator_summaries'):
+            cycle_loss_summary = tf.summary.scalar('cycle_loss', self.cycle_loss)
+            generator_loss_A2B_summary = tf.summary.scalar('generator_loss_A2B', self.generator_loss_A2B)
+            generator_loss_B2A_summary = tf.summary.scalar('generator_loss_B2A', self.generator_loss_B2A)
+            generator_loss_summary = tf.summary.scalar('generator_loss', self.generator_loss)
+            generator_summaries = tf.summary.merge([cycle_loss_summary, generator_loss_A2B_summary, generator_loss_B2A_summary, generator_loss_summary])
+
+        with tf.name_scope('discriminator_summaries'):
+            discriminator_loss_A_summary = tf.summary.scalar('discriminator_loss_A', self.discriminator_loss_A)
+            discriminator_loss_B_summary = tf.summary.scalar('discriminator_loss_B', self.discriminator_loss_B)
+            discriminator_loss_summary = tf.summary.scalar('discriminator_loss', self.discriminator_loss)
+            discriminator_summaries = tf.summary.merge([discriminator_loss_A_summary, discriminator_loss_B_summary, discriminator_loss_summary])
+
+        return generator_summaries, discriminator_summaries
+
+

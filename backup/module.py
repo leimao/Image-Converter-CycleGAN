@@ -1,8 +1,5 @@
 
-
 import tensorflow as tf 
-
-
 
 def conv2d_layer(
     inputs, 
@@ -62,21 +59,6 @@ def instance_norm_layer(
 
     return instance_norm_layer
 
-'''
-def residual_block(
-    inputs, 
-    filters, 
-    kernel_size = [3, 3], 
-    strides = [1, 1],
-    name_prefix = 'residule_block_'):
-
-    h1 = conv2d_layer(inputs = inputs, filters = filters, kernel_size = kernel_size, strides = strides, padding = 'same', activation = None, name = name_prefix + 'conv1')
-    h1_norm = instance_norm_layer(inputs = h1, activation_fn = tf.nn.relu(), name = name_prefix + 'norm1')
-    h2 = conv2d_layer(inputs = h1_norm, filters = filters, kernel_size = kernel_size, strides = strides, padding = 'same', activation = None, name = name_prefix + 'conv2')
-    h2_norm = instance_norm_layer(inputs = h2, activation_fn = None, name = name_prefix + 'norm2')
-
-    return inputs + h2_norm
-'''
 
 def residual_block(
     inputs, 
@@ -98,7 +80,6 @@ def residual_block(
     h2_norm = instance_norm_layer(inputs = h2, activation_fn = None, name = name_prefix + 'norm2')
 
     return inputs + h2_norm
-
 
 
 def discriminator(inputs, num_filters = 64, reuse = False, scope_name = 'discriminator'):

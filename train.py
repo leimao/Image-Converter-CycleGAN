@@ -14,11 +14,11 @@ def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A
 
     np.random.seed(random_seed)
 
-    num_epochs = 200
+    num_epochs = 1000
     mini_batch_size = 1 # mini_batch_size = 1 is better
     learning_rate = 0.0002
     input_size = [256, 256, 3]
-    num_filters = 8 
+    num_filters = 64 # Tried num_filters = 8 still not good for 200 epochs
 
     if validation_A_dir is not None:
         validation_A_output_dir = os.path.join(output_dir, 'converted_A')
