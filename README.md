@@ -162,6 +162,18 @@ The test images after 200 epochs does not look too much different to the test im
 
 Download the pre-trained [horse-zebra](https://drive.google.com/open?id=1_6TMfAK4q_4tUGEWzAxIQNBKo3E9CIq5) conversion model from Google Drive.
 
+### Yosemite Summer and Winter Conversion
+
+The Yosemite summer and winter conversion model was trained for more than 200 epochs, and some of the selected test images were presented below.
+
+Summer| Summer to Winter | Winter | Winter to Summer |
+:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+![](figures/summer.jpg)  |  ![](figures/summer2winter.jpg) |  ![](figures/winter.jpg)|  ![](figures/winter2summer.jpg)
+
+Most of the conversions works pretty well, except that the snows could not be converted probably because there is no objects that could be mapped to snow.
+
+Download the pre-trained Yosemite [summer-winter](https://drive.google.com/open?id=1_6TMfAK4q_4tUGEWzAxIQNBKo3E9CIq5) conversion model from Google Drive.
+
 ## References
 
 * Jun-Yan Zhu, Taesung Park, Phillip Isola, Alexei A. Efros. Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks. 2017.
