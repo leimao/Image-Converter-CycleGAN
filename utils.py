@@ -107,9 +107,9 @@ def img_subsampling(img, load_size, output_size):
     return img_output
 
 
-def sample_train_data(img_A_dataset, img_B_dataset, load_size = 286, output_size = 256):
+def sample_train_data(img_A_dataset, img_B_dataset, load_size = 286, output_size = 256, batch_size_maximum = 1000):
 
-    num_samples = min(len(img_A_dataset), len(img_B_dataset))
+    num_samples = min(len(img_A_dataset), len(img_B_dataset), batch_size_maximum)
     train_data_A_idx = np.arange(len(img_A_dataset))
     train_data_B_idx = np.arange(len(img_B_dataset))
     np.random.shuffle(train_data_A_idx)

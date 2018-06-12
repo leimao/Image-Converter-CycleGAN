@@ -8,7 +8,7 @@ import time
 from utils import load_data, sample_train_data, image_scaling, image_scaling_inverse
 from model import CycleGAN
 
-def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A_dir, validation_B_dir, output_dir, tensorboard_log_dir):
+def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, batch_size_maximum, validation_A_dir, validation_B_dir, output_dir, tensorboard_log_dir):
 
     np.random.seed(random_seed)
 
@@ -38,7 +38,7 @@ def train(img_A_dir, img_B_dir, model_dir, model_name, random_seed, validation_A
 
         start_time_epoch = time.time()
 
-        dataset_A, dataset_B = sample_train_data(dataset_A_raw, dataset_B_raw, load_size = 286, output_size = 256)
+        dataset_A, dataset_B = sample_train_data(dataset_A_raw, dataset_B_raw, load_size = 286, output_size = 256, batch_size_maximum = batch_size_maximum)
 
         n_samples = dataset_A.shape[0]
         for i in range(n_samples // mini_batch_size):
@@ -86,11 +86,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(description = 'Train CycleGAN model for datasets.')
 
+    parser = argparse.ArgumentParser(description = 'Train CycleGAN model for datasets.')
+
     img_A_dir_default = './data/horse2zebra/trainA'
     img_B_dir_default = './data/horse2zebra/trainB'
     model_dir_default = './model/horse_zebra'
     model_name_default = 'horse_zebra.ckpt'
     random_seed_default = 0
+    batch_size_maximum_default = 600
     validation_A_dir_default = './data/horse2zebra/testA'
     validation_B_dir_default = './data/horse2zebra/testB'
     output_dir_default = './validation_output'
@@ -101,6 +104,7 @@ if __name__ == '__main__':
     parser.add_argument('--model_dir', type = str, help = 'Directory for saving models.', default = model_dir_default)
     parser.add_argument('--model_name', type = str, help = 'File name for saving model.', default = model_name_default)
     parser.add_argument('--random_seed', type = int, help = 'Random seed for model training.', default = random_seed_default)
+    parser.add_argument('--batch_size_maximum', type = int, help = 'Maximum number of samples for one batch. Used for saving memories.', default = batch_size_maximum_default)
     parser.add_argument('--validation_A_dir', type = str, help = 'Convert validation A images after each training epoch. If set none, no conversion would be done during the training.', default = validation_A_dir_default)
     parser.add_argument('--validation_B_dir', type = str, help = 'Convert validation B images after each training epoch. If set none, no conversion would be done during the training.', default = validation_B_dir_default)
     parser.add_argument('--output_dir', type = str, help = 'Output directory for converted validation images.', default = output_dir_default)
@@ -118,4 +122,4 @@ if __name__ == '__main__':
     output_dir = argv.output_dir
     tensorboard_log_dir = argv.tensorboard_log_dir
 
-    train(img_A_dir = img_A_dir, img_B_dir = img_B_dir, model_dir = model_dir, model_name = model_name, random_seed = random_seed, validation_A_dir = validation_A_dir, validation_B_dir = validation_B_dir, output_dir = output_dir, tensorboard_log_dir = tensorboard_log_dir)
+    train(img_A_dir = img_A_dir, img_B_dir = img_B_dir, model_dir = model_dir, model_name = model_name, random_seed = random_seed, batch_size_maximum = batch_size_maximum, validation_A_dir = validation_A_dir, validation_B_dir = validation_B_dir, output_dir = output_dir, tensorboard_log_dir = tensorboard_log_dir)
