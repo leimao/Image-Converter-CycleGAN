@@ -172,7 +172,7 @@ Summer| Summer to Winter | Winter | Winter to Summer |
 
 Most of the conversions works pretty well, except that the snows could not be converted probably because there is no objects that could be mapped to snow.
 
-Download the pre-trained Yosemite [summer-winter](https://drive.google.com/open?id=1_6TMfAK4q_4tUGEWzAxIQNBKo3E9CIq5) conversion model from Google Drive.
+Download the pre-trained Yosemite [summer-winter](https://drive.google.com/open?id=1RWhO1SzKHscQeVMxmUNC1f-N48_tlUpp) conversion model from Google Drive.
 
 ## References
 
