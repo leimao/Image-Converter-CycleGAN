@@ -174,6 +174,20 @@ Most of the conversions works pretty well, except that the snows could not be co
 
 Download the pre-trained Yosemite [summer-winter](https://drive.google.com/open?id=1RWhO1SzKHscQeVMxmUNC1f-N48_tlUpp) conversion model from Google Drive.
 
+
+
+### Cityscapes Vision and Semantic Conversion
+
+The Cityscapes vision and semantic conversion model was trained for more than 150 epochs, and some of the selected test images were presented below.
+
+Vision| Vision to Semantic | Semantic | Semantic to Vision |
+:-------------------------:|:-------------------------:|:-------------------------:|:-------------------------:
+![](figures/vision.jpg)  |  ![](figures/vision2semantic.jpg) |  ![](figures/semantic.jpg)|  ![](figures/semantic2vision.jpg)
+
+The conversion from vision to semantic would usually leads to unexist objects or the object position has been moved in the semantic views, suggesting that CycleGAN, probably even GAN, is not a good technique to do semantic labelings. The conversion from semantic to vision failed to provide details of the object.
+
+Download the pre-trained Cityscapes [vision-semantic](https://drive.google.com/open?id=1endAYmv4IxJHvidO6Bw33J-7Fd1ARS_2) conversion model from Google Drive.
+
 ## References
 
 * Jun-Yan Zhu, Taesung Park, Phillip Isola, Alexei A. Efros. Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks. 2017.
