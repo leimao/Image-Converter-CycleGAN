@@ -117,6 +117,7 @@ if __name__ == '__main__':
     model_dir = argv.model_dir
     model_name = argv.model_name
     random_seed = argv.random_seed
+    batch_size_maximum = argv.batch_size_maximum
     validation_A_dir = None if argv.validation_A_dir == 'None' or argv.validation_A_dir == 'none' else argv.validation_A_dir
     validation_B_dir = None if argv.validation_B_dir == 'None' or argv.validation_B_dir == 'none' else argv.validation_B_dir
     output_dir = argv.output_dir
